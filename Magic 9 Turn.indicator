@@ -6,25 +6,31 @@ show_tdst = define(1, "Show TDST Lines (1=Yes)")
 // 神奇九转完整版 (TD Sequential Complete)
 // ==========================================
 // 
-// 【颜色规则】优先级越高,颜色越深
+// 【信号触发条件】
+// Buy 9:  连续9根K线 Close < Close[4] (下跌趋势暂停)
+// Sell 9: 连续9根K线 Close > Close[4] (上涨趋势暂停)
+// Buy Perfected:  Buy 9 + 第8/9根低点 <= 第6/7根低点
+// Sell Perfected: Sell 9 + 第8/9根高点 >= 第6/7根高点
+// Buy 13:  Buy 9后累计13次 Close <= Low[2]
+// Sell 13: Sell 9后累计13次 Close >= High[2]
+// Aggressive: Countdown 8-12时 Close <= Low[1-3]
+// Combo: Close < Low[2] (条件更严格,出信号更快)
 // 
-// ● 浅绿 #90EE90 = Combo Buy (最低优先级)
-// ● 浅红 #FF9999 = Combo Sell
-// ✕ 草绿 #32CD32 = Aggressive Buy
-// ✕ 粉红 #FF6666 = Aggressive Sell
-// ● 绿色 #00AA00 = Buy 9
-// ● 红色 #FF0000 = Sell 9
-// ● 深绿 #006600 = Buy Perfected ⭐
-// ● 深红 #CC0000 = Sell Perfected ⭐
-// ✕ 墨绿 #003300 = Buy 13 ⭐⭐ (最高优先级)
-// ✕ 暗红 #990000 = Sell 13 ⭐⭐
-// ─ 绿线=TDST支撑 ─ 红线=TDST阻力
+// 【颜色+大小规则】优先级越高,颜色越深,标记越大
+// ● 浅绿小圆 #90EE90 = Combo Buy (优先级5)
+// ✕ 草绿小叉 #32CD32 = Aggressive Buy (优先级4)
+// ● 绿色中圆 #00AA00 = Buy 9 (优先级3)
+// ● 深绿大圆 #006600 = Buy Perfected (优先级2)
+// ✕ 墨绿大叉 #003300 = Buy 13 (优先级1-最高)
 // 
-// 【优先级】13>Perfected>9>Aggressive>Combo
-// 【适用】日线/周线最佳
+// 卖出信号同理: 浅红→粉红→红色→深红→暗红
+// 
+// 【注意】下跌趋势中Sell信号多,上涨趋势中Buy信号多
+// 【适用】日线/周线效果最佳
 // ==========================================
 
-// ===== SETUP PHASE =====
+// ===== SETUP PHASE (九转) =====
+// 计数连续满足条件的K线数量
 buy_setup_cond = src < src[lookback]
 buy_setup_count = 0.0
 buy_setup_count := buy_setup_cond ? (fill_none(buy_setup_count[1], 0) + 1) : 0
@@ -37,18 +43,21 @@ sell_setup_count := sell_setup_cond ? (fill_none(sell_setup_count[1], 0) + 1) : 
 is_sell_8 = sell_setup_count == 8
 is_sell_9 = sell_setup_count == 9
 
-// ===== SETUP PERFECTION =====
+// ===== SETUP PERFECTION (完善) =====
+// 第8/9根的高低点突破第6/7根,信号质量更高
 buy_perf_cond = is_buy_9 and (low <= low[2] or low <= low[3] or low[1] <= low[2] or low[1] <= low[3])
 sell_perf_cond = is_sell_9 and (high >= high[2] or high >= high[3] or high[1] >= high[2] or high[1] >= high[3])
 
 // ===== TDST SUPPORT/RESISTANCE =====
+// Buy Setup完成时取最高点作为阻力,Sell Setup取最低点作为支撑
 tdst_buy_level = 0.0
 tdst_buy_level := is_buy_9 ? math.max(math.max(math.max(high, high[1]), math.max(high[2], high[3])), math.max(math.max(high[4], high[5]), math.max(high[6], high[7]))) : fill_none(tdst_buy_level[1], 0)
 
 tdst_sell_level = 0.0
 tdst_sell_level := is_sell_9 ? math.min(math.min(math.min(low, low[1]), math.min(low[2], low[3])), math.min(math.min(low[4], low[5]), math.min(low[6], low[7]))) : fill_none(tdst_sell_level[1], 0)
 
-// ===== COUNTDOWN PHASE =====
+// ===== COUNTDOWN PHASE (十三转) =====
+// Setup完成后开始计数,反向Setup出现则重置
 cd_state = 0.0
 prev_cd_state = fill_none(cd_state[1], 0)
 cd_state := is_buy_9 ? 1 : (is_sell_9 ? -1 : prev_cd_state)
@@ -68,12 +77,14 @@ is_sell_12 = sell_cd_count == 12 and prev_sell_cd == 11
 is_sell_13 = sell_cd_count == 13 and prev_sell_cd == 12
 
 // ===== AGGRESSIVE 13 =====
+// Countdown计数到8-12之间,满足条件可提前入场
 agg_buy_cond = buy_cd_count >= 8 and buy_cd_count < 13
 agg_buy_trigger = agg_buy_cond and (src <= low[1] or src <= low[2] or src <= low[3])
 agg_sell_cond = sell_cd_count >= 8 and sell_cd_count < 13
 agg_sell_trigger = agg_sell_cond and (src >= high[1] or src >= high[2] or src >= high[3])
 
 // ===== TD COMBO =====
+// 替代计数法,条件更严格(Close < Low[2]),出信号更快
 combo_buy_cond = src < low[2]
 combo_buy_count = 0.0
 prev_combo_buy = fill_none(combo_buy_count[1], 0)
@@ -86,27 +97,27 @@ prev_combo_sell = fill_none(combo_sell_count[1], 0)
 combo_sell_count := is_buy_9 ? 0 : (is_sell_9 ? 1 : (cd_state == -1 and combo_sell_cond and prev_combo_sell < 13 ? prev_combo_sell + 1 : prev_combo_sell))
 is_combo_sell_13 = combo_sell_count == 13 and prev_combo_sell == 12
 
-// ===== PLOTTING - SIMPLIFIED COLOR SCHEME =====
+// ===== PLOTTING =====
 
-// Setup 9 - Circles (中等优先级)
+// Setup 9 - 中等优先级
 plt(is_buy_9 ? low : none, name="Buy 9", type=plt.type_circles, color=#00AA00, line_width=2)
 plt(is_sell_9 ? high : none, name="Sell 9", type=plt.type_circles, color=#FF0000, line_width=2)
 
-// Perfection - Circles (高优先级,深色)
-plt(buy_perf_cond ? low*0.998 : none, name="Buy Perfected", type=plt.type_circles, color=#006600, line_width=2)
-plt(sell_perf_cond ? high*1.002 : none, name="Sell Perfected", type=plt.type_circles, color=#CC0000, line_width=2)
+// Perfection - 高优先级
+plt(buy_perf_cond ? low*0.998 : none, name="Buy Perfected", type=plt.type_circles, color=#006600, line_width=3)
+plt(sell_perf_cond ? high*1.002 : none, name="Sell Perfected", type=plt.type_circles, color=#CC0000, line_width=3)
 
-// Countdown 13 - Crosses (最高优先级,最深色)
-plt(is_buy_13 ? low*0.99 : none, name="Buy 13", type=plt.type_cross, color=#003300, line_width=2)
-plt(is_sell_13 ? high*1.01 : none, name="Sell 13", type=plt.type_cross, color=#990000, line_width=2)
+// Countdown 13 - 最高优先级
+plt(is_buy_13 ? low*0.997 : none, name="Buy 13", type=plt.type_cross, color=#003300, line_width=3)
+plt(is_sell_13 ? high*1.003 : none, name="Sell 13", type=plt.type_cross, color=#990000, line_width=3)
 
-// Aggressive - Crosses (低优先级,较浅)
-plt(agg_buy_trigger ? low*0.985 : none, name="Aggressive Buy", type=plt.type_cross, color=#32CD32, line_width=1)
-plt(agg_sell_trigger ? high*1.015 : none, name="Aggressive Sell", type=plt.type_cross, color=#FF6666, line_width=1)
+// Aggressive - 低优先级
+plt(agg_buy_trigger ? low*0.995 : none, name="Aggressive Buy", type=plt.type_cross, color=#32CD32, line_width=1)
+plt(agg_sell_trigger ? high*1.005 : none, name="Aggressive Sell", type=plt.type_cross, color=#FF6666, line_width=1)
 
-// TD Combo 13 - Circles (最低优先级,最浅色)
-plt(is_combo_buy_13 ? low*0.98 : none, name="Combo Buy 13", type=plt.type_circles, color=#90EE90, line_width=2)
-plt(is_combo_sell_13 ? high*1.02 : none, name="Combo Sell 13", type=plt.type_circles, color=#FF9999, line_width=2)
+// TD Combo 13 - 最低优先级
+plt(is_combo_buy_13 ? low*0.98 : none, name="Combo Buy 13", type=plt.type_circles, color=#90EE90, line_width=1)
+plt(is_combo_sell_13 ? high*1.02 : none, name="Combo Sell 13", type=plt.type_circles, color=#FF9999, line_width=1)
 
 // TDST Lines
 plt(show_tdst == 1 and tdst_buy_level > 0 ? tdst_buy_level : none, name="TDST Resistance", type=plt.type_linebr, color=color.red, line_width=1)
