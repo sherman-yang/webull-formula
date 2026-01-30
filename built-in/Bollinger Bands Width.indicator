@@ -1,0 +1,9 @@
+length = define(20, min=1, name="Length")
+src = define(close, name="Source")
+mult = define(2.0, min=0.001, max=50, name="StdDev")
+basis = ind.sma(src, length)
+devg = mult * math.std(src, length)
+upper = basis + devg
+lower = basis - devg
+bbwg = (upper-lower)/basis
+plt(bbwg, color=#5886FF,name="BBW")

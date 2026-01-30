@@ -1,0 +1,10 @@
+kLength = define(14, "%K Length")
+dLength = define(3, "%D Length")
+
+// === Fast Stochastic (%K and %D) ===
+k = math.stoch(close, high, low, kLength)
+d = ind.sma(k, dLength)
+
+// === Plot Stoch Lines ===
+plt(k, color=color.blue, line_width=1, name="%K")
+plt(d, color=color.orange, line_width=1, name="%D")  

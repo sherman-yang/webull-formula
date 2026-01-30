@@ -1,0 +1,8 @@
+src = define(close, name="Source")
+length = define(50, name="Length")
+
+ma = ind.sma(src,length)
+KRI = 100 * (src - ma) / ma
+
+plt(KRI, name = "KRI", line_width = 2)
+hline(0, name = "0", color=color.gray)

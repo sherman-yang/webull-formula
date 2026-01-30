@@ -1,0 +1,5 @@
+short = define(3,min=1,name="Fast Length")
+long = define(10,min=1,name="Slow Length")
+osc = ind.ema(ind.accdist, short) - ind.ema(ind.accdist, long)
+plt(osc, color=#FE9F21,name="Chaikin Osc")
+hline(0, color=#9A9A9A, line_type=hline.type_dotted,name="Zero")

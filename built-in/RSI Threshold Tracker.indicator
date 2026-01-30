@@ -1,0 +1,27 @@
+src = define(name="Source", type=define.source, default_value=close) 
+for_rsi = define(name="RSI_period", type=define.integer, default_value=14) 
+for_ma = define(name="Basis_BB", type=define.integer, default_value=20) 
+for_mult = define(name="Stdev", type=define.integer, default_value=2) 
+for_sigma = define(name="Dispersion", type=define.float, default_value=0.1) 
+
+
+current_rsi = ind.rsi(src, for_rsi) 
+basis = ind.ema(current_rsi, for_ma)
+dev = for_mult * math.std(current_rsi, for_ma)
+upper = basis + dev
+lower = basis - dev
+disp_up = basis + ((upper - lower) * for_sigma) 
+disp_down = basis - ((upper - lower) * for_sigma) 
+color_rsi = current_rsi >= disp_up ? color.lime : current_rsi <= disp_down ? color.red : #ffea00
+
+
+h1 = hline(70, color=#d4d4d4, line_type=hline.type_dotted, line_width=1)
+h2 = hline(30, color=#d4d4d4, line_type=hline.type_dotted, line_width=1)
+
+plt(basis, color=color.black)
+plt(upper, color=#00fff0, line_width=2)
+plt(lower, color=#00fff0, line_width=2)
+s1 = plt(disp_up, color=color.white)
+s2 = plt(disp_down, color=color.white)
+plt.fill_between(s1, s2, color=color.white, opacity=80)
+plt(current_rsi, color=color_rsi, line_width=2)

@@ -1,0 +1,11 @@
+period=define(20,"CCI period")
+coeff=define(1,"ATR Multiplier")
+AP=define(5,"ATR Period")
+ATR=ind.sma(ind.tr,AP)
+src=define(close)
+upT=low-ATR*coeff
+downT=high+ATR*coeff
+MagicTrend=0.0
+MagicTrend := ind.cci(src,period)>=0 ? (upT<fill_none(MagicTrend[1],0) ? fill_none(MagicTrend[1],0) : upT) : (downT>fill_none(MagicTrend[1],0) ? fill_none(MagicTrend[1],0) : downT)
+color1= ind.cci(src,period)>=0 ? #0022FC : #FC0400
+plt(MagicTrend, color=color1, line_width=3)

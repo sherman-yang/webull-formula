@@ -1,0 +1,49 @@
+src1 = close
+len1 = define(default_value=08, min=1, name="EMA Length1")
+src2 = close
+len2 = define(default_value=14, min=1, name="EMA Length2")
+src3 = close
+len3 = define(default_value=20, min=1, name="EMA Length2")
+src4 = close
+len4 = define(default_value=26, min=1, name="EMA Length3")
+src5 = close
+len5 = define(default_value=32, min=1, name="EMA Length4")
+src6 = close
+len6 = define(default_value=38, min=1, name="EMA Length5")
+src7 = close
+len7 = define(default_value=44, min=1, name="EMA Length6")
+src8 = close
+len8 = define(default_value=50, min=1, name="EMA Length7")
+src0 = close
+len0 = define(default_value=60, min=1, name="EMA Length8")
+ema1 = ind.ema(src1, len1)
+ema2 = ind.ema(src2, len2)
+ema3 = ind.ema(src3, len3)
+ema4 = ind.ema(src4, len4)
+ema5 = ind.ema(src5, len5)
+ema6 = ind.ema(src6, len6)
+ema7 = ind.ema(src7, len7)
+ema8 = ind.ema(src8, len8)
+ema0 = ind.ema(src0, len0)
+
+
+plt_color1 = ema1 >= ema1[2]  ? #b3caf8 : ema1 < ema1[2] ? #b3caf7 : none
+plt_color2 = ema2 >= ema2[2]  ? #7ca6f6 : ema2 < ema2[2] ? #7ca6f5 : none
+plt_color3 = ema3 >= ema3[2]  ? #6597f7 : ema3 < ema3[2] ? #6597f6 : none
+plt_color4 = ema4 >= ema4[2]  ? #6597f7 : ema4 < ema4[2] ? #6597f6 : none
+plt_color5 = ema5 >= ema5[2]  ? #4985E7 : ema5 < ema5[2] ? #4985E6 : none
+plt_color6 = ema6 >= ema6[2]  ? #3e7df8 : ema6 < ema6[2] ? #3e7df7 : none
+plt_color7 = ema7 >= ema7[2]  ? #3e7df8 : ema7 < ema7[2] ? #3e7df7 : none
+plt_color8 = ema8 >= ema8[2]  ? #0057FF : ema8 < ema8[2] ? #0057FE : none
+
+plt_color0 = ema0 >= ema0[2]  ? color.lime: ema0 < ema0[2] ? color.red : none
+
+plt(ema1, name="EMA plt1", type=plt.type_line, line_width=1, color = plt_color1)
+plt(ema2, name="EMA plt2", type=plt.type_line, line_width=1, color = plt_color2)
+plt(ema3, name="EMA plt3", type=plt.type_line, line_width=1, color = plt_color3)
+plt(ema4, name="EMA plt4", type=plt.type_line, line_width=1, color = plt_color4)
+plt(ema5, name="EMA plt5", type=plt.type_line, line_width=1, color = plt_color5)
+plt(ema6, name="EMA plt6", type=plt.type_line, line_width=1, color = plt_color6)
+plt(ema7, name="EMA plt7", type=plt.type_line, line_width=1, color = plt_color7)
+plt(ema8, name="EMA plt8", type=plt.type_line, line_width=1, color = plt_color8)
+plt(ema0, name="EMA plt9", type=plt.type_line, line_width=3, color = plt_color0)

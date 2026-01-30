@@ -1,0 +1,6 @@
+ema_length = define(21, name="ema length")
+ad = (close - open) / (high - low) * volume
+cad = math.cumsum(ad)
+wad_ema = ind.ema(cad, ema_length)
+plt(cad,line_width=2,color=color.blue)
+plt(wad_ema,color=color.gray)

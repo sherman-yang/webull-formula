@@ -1,0 +1,8 @@
+period_ = define(14, name="Period", min=2)
+VMP = math.sum( math.abs( high - low[1]), period_ )
+VMM = math.sum( math.abs( low - high[1]), period_ )
+STR = math.sum( ind.atr(1), period_ )
+VIP = VMP / STR
+VIM = VMM / STR
+plt(VIP, name="VI +", color=#7058FF)
+plt(VIM, name="VI -", color=#FE9F21)

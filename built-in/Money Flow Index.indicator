@@ -1,0 +1,9 @@
+length = define(name="Length", type=define.integer, default_value=14, min=1, max=2000)
+src = hlc3
+upper = math.sum(volume * (math.diff(src) <= 0 ? 0 : src), length)
+lower = math.sum(volume * (math.diff(src) >= 0 ? 0 : src), length)
+mf = ind.rsi(upper, lower)
+overbought=hline(80, name="Overbought", color=#9A9A9A,line_type=hline.type_dotted)
+oversold=hline(20, name="Oversold", color=#9A9A9A,line_type=hline.type_dotted)
+plt.fill_between(overbought, oversold, color=#7058FF, opacity=10, name="Background")
+plt(mf, color=#0B90FF, name="MF")

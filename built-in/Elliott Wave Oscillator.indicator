@@ -1,0 +1,3 @@
+s2=ind.ema(close, 5) - ind.ema(close, 35)
+c_color=s2 <= 0 ? color.red : #00C288
+plt(s2, color=c_color, type=plt.type_columns, base_line=0, line_width=1,name = "EWO")

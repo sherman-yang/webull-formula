@@ -1,0 +1,22 @@
+adxlen = define(14, name="ADX Smoothing")
+dilen = define(14, name="Length")
+dirmov(len) =>
+    up = math.diff(high)
+    down = -math.diff(low)
+    plusDM = none(up) ? none : (up > down and up > 0 ? up : 0)
+      minusDM = none(down) ? none : (down > up and down > 0 ? down : 0)
+    truerange = ind.rma( ind.tr, len)
+    plus = 100 * ind.rma(plusDM, len) / truerange
+    minus = 100 * ind.rma(minusDM, len) / truerange
+	plus_filled = fill_none(plus,plus[1])
+	minus_filled = fill_none(minus,minus[1])
+    [plus_filled, minus_filled]
+
+adx(dilen, adxlen) =>
+    [plus, minus] = dirmov(dilen)
+    sum = plus + minus
+    adx = 100 *ind. rma(math.abs(plus - minus) / (sum == 0 ? 1 : sum), adxlen)
+
+sig = adx(dilen, adxlen)
+
+plt(sig, color=color.red, name="ADX")

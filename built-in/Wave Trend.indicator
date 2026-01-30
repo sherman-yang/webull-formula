@@ -1,0 +1,25 @@
+
+length1 = define(10, "Channel Length")
+length2 = define(21, "Average Length")
+OBLevel1 = define(60, "Over Bought Level 1")
+OBLevel2 = define(53, "Over Bought Level 2")
+OSLevel1 = define(-60, "Over Sold Level 1")
+OSLevel2 = define(-53, "Over Sold Level 2")
+ 
+ap = hlc3 
+esa = ind.ema(ap, length1)
+d = ind.ema(math.abs(ap - esa), length1)
+ci = (ap - esa) / (0.015 * d)
+tci = ind.ema(ci, length2)
+ 
+wt1 = tci
+wt2 = ind.sma(wt1,4)
+
+plt(0, name="zero",color=color.gray)
+plt(OBLevel1, name="OBLevel1",color=color.red)
+plt(OBLevel2, name="OBLevel2",color=color.red)
+plt(OSLevel1, name="OSLevel1",color=color.green)
+plt(OSLevel2, name="OSLevel2",color=color.green)
+
+plt(wt1, name="wt1",color=color.green)
+plt(wt2, name="wt2",color=color.red)

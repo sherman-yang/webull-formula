@@ -1,0 +1,19 @@
+showSignal = define(name="Show Signal ?", type=define.bool, default_value=true)
+signalType = define(name="Signal Smoothing Type", default_value="SMA", optional_values=["EMA", "SMA"])
+signalLength = define(name="Signal Smoothing Length", type=define.integer, default_value=21)
+
+applyFilling = define(name="Apply Ribbon Filling ?", type=define.bool, default_value=true)
+
+price_voulume_trend = math.cumsum((math.diff(close) / close[1]) * volume)
+signal = signalType == "EMA" ? ind.ema(price_voulume_trend, signalLength) : ind.sma(price_voulume_trend, signalLength)
+
+trendColor = price_voulume_trend > signal ? #0ebb23 : color.red
+pvtColor = applyFilling ? trendColor : #0094ff
+signalColor = applyFilling ? trendColor : #ff6a00
+
+pvtplt = plt(price_voulume_trend, name="PVT", line_width=2, color=pvtColor)
+signalplt = plt(showSignal ? signal : none, name="Signal", color=signalColor)
+
+
+fillColor = applyFilling ? trendColor : color.white
+plt.fill_between(pvtplt, signalplt, color=fillColor)

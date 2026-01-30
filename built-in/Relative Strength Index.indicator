@@ -1,0 +1,9 @@
+src = close
+len = define(14, min=1, name="Length")
+up = ind.rma(math.max(math.diff(src), 0), len)
+down = ind.rma(-math.min(math.diff(src), 0), len)
+rsia = down == 0 ? 100 : up == 0 ? 0 : 100 - (100 / (1 + up / down))
+band1 = hline(70, name="Upper Band",color=#9A9A9A, line_type=hline.type_dotted)
+band0 = hline(30, name="Lower Band",color=#9A9A9A, line_type=hline.type_dotted)
+plt.fill_between(band1, band0, color=#0B90FF, opacity=10, name="Background")
+plt(rsia, color=#53d6ef, name="RSI")

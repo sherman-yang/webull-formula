@@ -1,0 +1,9 @@
+shortlen = define(5, min=1, name="Short Period")
+longlen = define(20, min=1, name="Long Period")
+siglen = define(5, min=1, name="Signonel Line Period")
+erg = ind.tsi(close, shortlen, longlen)
+sig = ind.ema(erg, siglen)
+osc = erg - sig
+plt(erg, color=#FE9F21, name="Indicator")
+plt(sig, color=#0B90FF, name="Signonel")
+plt(osc, color=#FF5858, type=plt.type_histogram, name="Oscillator")

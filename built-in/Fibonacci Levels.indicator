@@ -1,0 +1,47 @@
+emaperiod=define(name="100 MA", default_value=100, min=1)
+
+toc=math.max(open,close)
+boc=math.min(open,close)
+
+effclose=if close>=open
+	toc
+else
+	boc
+
+midline=fill_none(ind.ema(effclose,emaperiod))
+
+
+dev=math.std(effclose,emaperiod)
+
+plusdevmult=if toc>midline
+	(toc-midline)/dev
+else
+	0
+
+minusdevmult=if boc<midline
+	(midline-boc)/dev
+else
+	0
+
+maxmult=math.max(minusdevmult,plusdevmult)
+
+lm=ind.ema(maxmult,emaperiod)
+lm2=lm/2
+lm3=lm2*0.38196601
+lm4=lm*1.38196601
+lm5=lm*1.61803399
+lm6=(lm+lm2)/2
+
+plt(midline+(dev*lm5), name="UP 6", color=#FE9F21, display=0)
+plt(midline+(dev*lm4), name="UP 5", color=#FE9F21, display=0)
+plt(midline+(dev*lm), name="UP 4", color=#FE9F21, display=0)
+plt(midline+(dev*lm6), name="UP 3", color=#FE9F21)
+plt(midline+(dev*lm2), name="UP 2", color=#FE9F21)
+plt(midline+(dev*lm3), name="UP 1", color=#FE9F21)
+plt(midline,name="Middle", color=#5886FF, line_width=2)
+plt(midline-(dev*lm3), name="Down 1", color=#FE9F21)
+plt(midline-(dev*lm2), name="Down 2", color=#FE9F21)
+plt(midline-(dev*lm6), name="Down 3", color=#FE9F21)
+plt(midline-(dev*lm), name="Down 4", color=#FE9F21, display=0)
+plt(midline-(dev*lm4), name="Down 5", color=#FE9F21, display=0)
+plt(midline-(dev*lm5), name="Down 6", color=#FE9F21, display=0)

@@ -1,0 +1,26 @@
+
+len = define(14)
+th = define(20)
+
+TrueRange = math.max(math.max(high-low, math.abs(high-fill_none(close[1]))), math.abs(low-fill_none(close[1])))
+DirectionalMovementPlus = high-fill_none(high[1]) > fill_none(low[1])-low ? math.max(high-fill_none(high[1]), 0): 0
+DirectionalMovementMinus = fill_none(low[1])-low > high-fill_none(high[1]) ? math.max(fill_none(low[1])-low, 0): 0
+
+SmoothedTrueRange = 0.0
+SmoothedTrueRange := fill_none(SmoothedTrueRange[1]) - (fill_none(SmoothedTrueRange[1])/len) + TrueRange
+
+SmoothedDirectionalMovementPlus = 0.0
+SmoothedDirectionalMovementPlus := fill_none(SmoothedDirectionalMovementPlus[1]) - (fill_none(SmoothedDirectionalMovementPlus[1])/len) + DirectionalMovementPlus
+
+SmoothedDirectionalMovementMinus = 0.0
+SmoothedDirectionalMovementMinus := fill_none(SmoothedDirectionalMovementMinus[1]) - (fill_none(SmoothedDirectionalMovementMinus[1])/len) + DirectionalMovementMinus
+
+DIPlus = SmoothedDirectionalMovementPlus / SmoothedTrueRange * 100
+DIMinus = SmoothedDirectionalMovementMinus / SmoothedTrueRange * 100
+DX = math.abs(DIPlus-DIMinus) / (DIPlus+DIMinus)*100
+ADX = ind.sma(DX, len)
+
+plt(DIPlus, color=color.green, name="DI+",type=plt.type_line)
+plt(DIMinus, color=color.red, name="DI-",type=plt.type_line)
+plt(ADX, color=color.navy, name="ADX",type=plt.type_line)
+hline(th, color=color.black)

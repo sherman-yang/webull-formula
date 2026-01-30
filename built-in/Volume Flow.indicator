@@ -1,0 +1,28 @@
+length = define(130, name="VFI length")
+coef = define(0.2)
+vcoef = define(2.5, name="Max. vol. cutoff")
+signalLength=define(5)
+smoothVFI=define(false, type=define.bool)
+
+ma(x,y) => smoothVFI ? sma(x,y) : x
+
+typical=hlc3
+inter = math.log( typical ) - math.log( typical[1] )
+vinter = math.std(inter, 30 )
+cutoff = coef * vinter * close
+vma =  ind.sma( volume, length )
+vave = vma[1]
+vmax = vave * vcoef
+vc = iff(volume < vmax, volume, vmax) 
+mf = typical - typical[1]
+vcp = iff( mf > cutoff, vc, iff ( mf < -cutoff, -vc, 0 ) )
+
+vfi = ind.sma(math.sum( vcp , length )/vave, 3)
+vfima=ind.ema( vfi, signalLength )
+d=vfi-vfima
+
+plt(0, color=color.gray, type=plt.type_line)
+showHisto=define(true, type=define.bool)
+plt(showHisto ? d : none, type=plt.type_histogram, color=color.gray, line_width=3, opacity=50)
+plt( vfima , name="EMA of vfi", color=color.orange)
+plt( vfi, name="vfi", color=color.green,line_width=2)

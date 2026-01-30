@@ -1,0 +1,10 @@
+len = define(14, name="RSI Length")
+ob = define(60, name="Upper Threshold")
+os = define(40, name="Lower Threshold")
+rsi = ind.rsi(close, len)
+col = rsi>=ob?color.green : rsi<=os?color.red:color.gray
+plt(rsi, color=col, line_width=2,opacity=60, name="RSI_Trend")
+
+
+h1 = hline(ob,name="Upper Threshold")
+h2 = hline(os, name="Lower Threshold")

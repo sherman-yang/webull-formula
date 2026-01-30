@@ -1,0 +1,4 @@
+length = define(20, min=1, name="Length")
+src = define(close, name="Source")
+stdev = math.std(src, length)
+plt(stdev, color=#5886FF, name="STDV")

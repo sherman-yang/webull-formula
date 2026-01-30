@@ -1,0 +1,16 @@
+len = define(14, min=1, name="DI Length")
+lensig = define(14, name="ADX Smoothing", min=1, max=50)
+
+up = math.diff(high)
+down = -math.diff(low)
+plusDM = none(up) ? none : (up > down and up > 0 ? up : 0)
+minusDM = none(down) ? none : (down > up and down > 0 ? down : 0)
+trur = ind.rma(ind.tr, len)
+plus = 100 * ind.rma(plusDM, len) / trur
+minus = 100 * ind.rma(minusDM, len) / trur
+sum = plus + minus
+adx = 100 * ind.rma(math.abs(plus - minus) / (sum == 0 ? 1 : sum), lensig)
+
+plt(plus, color=#5886FF, name="+DI")
+plt(minus, color=#FE9F21, name="-DI")
+plt(adx, color=#FD4C5F, name="ADX")

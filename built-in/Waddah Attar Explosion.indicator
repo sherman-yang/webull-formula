@@ -1,0 +1,34 @@
+sensitivity = define(150, name="Sensitivity")
+fastLength=define(20, name="FastEMA Length")
+slowLength=define(40, name="SlowEMA Length")
+channelLength=define(20, name="BB Channel Length")
+mult=define(2.0, name="BB Stdev Multiplier")
+
+DEAD_ZONE = fill_none(ind.rma(math.max(high - low, math.abs(high - close[1]), math.abs(low - close[1])),100)) * 3.7
+
+calc_macd(source, fastLength, slowLength) =>
+	fastMA = ind.ema(source, fastLength)
+	slowMA = ind.ema(source, slowLength)
+	fastMA - slowMA
+
+calc_BBUpper(source, length, mult) => 
+	basis = ind.sma(source, length)
+	dev = mult * math.std(source, length)
+	basis + dev
+
+calc_BBLower(source, length, mult) => 
+	basis = ind.sma(source, length)
+	dev = mult * math.std(source, length)
+	basis - dev
+
+t1 = (calc_macd(close, fastLength, slowLength) - calc_macd(close[1], fastLength, slowLength))*sensitivity
+
+e1 = (calc_BBUpper(close, channelLength, mult) - calc_BBLower(close, channelLength, mult))
+
+trendUp = (t1 >= 0) ? t1 : none
+trendDown = (t1 < 0) ? (math.abs(t1)) : none
+
+plt(trendUp, type=plt.type_columns, line_width=1, color=(trendUp<trendUp[1])?color.lime:color.green, name="UpTrend")
+plt(trendDown, type=plt.type_columns, line_width=1, color=(trendDown<trendDown[1])?color.orange:color.red, name="DownTrend")
+plt(e1, type=plt.type_line, line_width=2, color=#A0522D, name="ExplosionLine")
+plt(DEAD_ZONE, color=color.blue, line_width=1, type=plt.type_cross, name="DeadZoneLine")

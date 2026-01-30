@@ -1,0 +1,142 @@
+src = define(close, "Source")
+lookback = define(4, "Lookback")
+show_tdst = define(1, "Show TDST Lines (1=Yes)")
+
+// ==========================================
+// 神奇九转完整版 (TD Sequential Complete)
+// ==========================================
+// 
+// 【功能模块】
+// 1. Setup (结构/九转): 连续9根K线满足条件
+// 2. Setup Perfection (结构完善): 高质量九转信号过滤
+// 3. Countdown (计数/十三转): 累计13次满足条件
+// 4. TD Combo: 替代计数法，更激进
+// 5. Aggressive 13: 计数8-12之间的提前入场信号
+// 6. TDST: 自动绘制支撑/阻力线
+// 
+// 【信号图例】
+// ● 绿色小圆点 (半透明) = Buy 8 预警
+// ● 绿色圆点 = Buy 9 九转买入
+// ● 亮绿大圆点 = Buy Perfected 完善买入(高质量)
+// ● 红色小圆点 (半透明) = Sell 8 预警
+// ● 红色圆点 = Sell 9 九转卖出
+// ● 亮红大圆点 = Sell Perfected 完善卖出(高质量)
+// ✕ 青色小十字 (半透明) = Buy 12 预警
+// ✕ 青色十字 = Buy 13 十三转买入 (强信号)
+// ✕ 洋红小十字 (半透明) = Sell 12 预警
+// ✕ 洋红十字 = Sell 13 十三转卖出 (强信号)
+// ✕ 黄色十字 = Aggressive Buy 激进买入
+// ✕ 橙色十字 = Aggressive Sell 激进卖出
+// ● 青色大圆 = Combo Buy 13 组合买入
+// ● 洋红大圆 = Combo Sell 13 组合卖出
+// ─ 绿色水平线 = TDST Support 支撑位
+// ─ 红色水平线 = TDST Resistance 阻力位
+// 
+// 【使用建议】
+// - 日线/周线效果最佳，1分钟/3分钟噪音较多
+// - Perfection信号优先级 > 普通Setup
+// - Countdown 13 > Aggressive 13 > Setup 9
+// - TDST线可作为止损/止盈参考
+// ==========================================
+
+// ===== SETUP PHASE =====
+buy_setup_cond = src < src[lookback]
+buy_setup_count = 0.0
+buy_setup_count := buy_setup_cond ? (fill_none(buy_setup_count[1], 0) + 1) : 0
+is_buy_8 = buy_setup_count == 8
+is_buy_9 = buy_setup_count == 9
+
+sell_setup_cond = src > src[lookback]
+sell_setup_count = 0.0
+sell_setup_count := sell_setup_cond ? (fill_none(sell_setup_count[1], 0) + 1) : 0
+is_sell_8 = sell_setup_count == 8
+is_sell_9 = sell_setup_count == 9
+
+// ===== SETUP PERFECTION =====
+// Buy Perfection: Bar 8 or 9 Low < Bar 6 or 7 Low
+buy_perf_cond = is_buy_9 and (low <= low[2] or low <= low[3] or low[1] <= low[2] or low[1] <= low[3])
+// Sell Perfection: Bar 8 or 9 High > Bar 6 or 7 High  
+sell_perf_cond = is_sell_9 and (high >= high[2] or high >= high[3] or high[1] >= high[2] or high[1] >= high[3])
+
+// ===== TDST SUPPORT/RESISTANCE =====
+// TDST Buy: Highest High of Buy Setup becomes Resistance
+// TDST Sell: Lowest Low of Sell Setup becomes Support
+tdst_buy_level = 0.0
+tdst_buy_level := is_buy_9 ? math.max(math.max(math.max(high, high[1]), math.max(high[2], high[3])), math.max(math.max(high[4], high[5]), math.max(high[6], high[7]))) : fill_none(tdst_buy_level[1], 0)
+
+tdst_sell_level = 0.0
+tdst_sell_level := is_sell_9 ? math.min(math.min(math.min(low, low[1]), math.min(low[2], low[3])), math.min(math.min(low[4], low[5]), math.min(low[6], low[7]))) : fill_none(tdst_sell_level[1], 0)
+
+// ===== COUNTDOWN PHASE =====
+cd_state = 0.0
+prev_cd_state = fill_none(cd_state[1], 0)
+cd_state := is_buy_9 ? 1 : (is_sell_9 ? -1 : prev_cd_state)
+
+// Buy Countdown
+buy_cd_cond = src <= low[2]
+buy_cd_count = 0.0
+prev_buy_cd = fill_none(buy_cd_count[1], 0)
+buy_cd_count := (cd_state == 1) ? (buy_cd_cond and prev_buy_cd < 13 ? prev_buy_cd + 1 : prev_buy_cd) : 0
+is_buy_12 = buy_cd_count == 12 and prev_buy_cd == 11
+is_buy_13 = buy_cd_count == 13 and prev_buy_cd == 12
+
+// Sell Countdown
+sell_cd_cond = src >= high[2]
+sell_cd_count = 0.0
+prev_sell_cd = fill_none(sell_cd_count[1], 0)
+sell_cd_count := (cd_state == -1) ? (sell_cd_cond and prev_sell_cd < 13 ? prev_sell_cd + 1 : prev_sell_cd) : 0
+is_sell_12 = sell_cd_count == 12 and prev_sell_cd == 11
+is_sell_13 = sell_cd_count == 13 and prev_sell_cd == 12
+
+// ===== AGGRESSIVE 13 =====
+// Aggressive Buy: Countdown >= 8 and Close <= any prior Countdown bar's Low
+agg_buy_cond = buy_cd_count >= 8 and buy_cd_count < 13
+agg_buy_trigger = agg_buy_cond and (src <= low[1] or src <= low[2] or src <= low[3])
+// Aggressive Sell: Countdown >= 8 and Close >= any prior Countdown bar's High
+agg_sell_cond = sell_cd_count >= 8 and sell_cd_count < 13
+agg_sell_trigger = agg_sell_cond and (src >= high[1] or src >= high[2] or src >= high[3])
+
+// ===== TD COMBO =====
+// Combo counts when: Close < Low[2] (buy) OR Close > High[2] (sell)
+// But only AFTER a completed Setup, and resets on opposite Setup
+combo_buy_cond = src < low[2]
+combo_buy_count = 0.0
+prev_combo_buy = fill_none(combo_buy_count[1], 0)
+combo_buy_count := is_sell_9 ? 0 : (is_buy_9 ? 1 : (cd_state == 1 and combo_buy_cond and prev_combo_buy < 13 ? prev_combo_buy + 1 : prev_combo_buy))
+is_combo_buy_13 = combo_buy_count == 13 and prev_combo_buy == 12
+
+combo_sell_cond = src > high[2]
+combo_sell_count = 0.0
+prev_combo_sell = fill_none(combo_sell_count[1], 0)
+combo_sell_count := is_buy_9 ? 0 : (is_sell_9 ? 1 : (cd_state == -1 and combo_sell_cond and prev_combo_sell < 13 ? prev_combo_sell + 1 : prev_combo_sell))
+is_combo_sell_13 = combo_sell_count == 13 and prev_combo_sell == 12
+
+// ===== PLOTTING =====
+
+// Setup 8/9 - Circles
+plt(is_buy_8 ? low : none, name="Buy 8", type=plt.type_circles, color=color.green, line_width=1, opacity=50)
+plt(is_buy_9 ? low : none, name="Buy 9", type=plt.type_circles, color=color.green, line_width=2)
+plt(is_sell_8 ? high : none, name="Sell 8", type=plt.type_circles, color=color.red, line_width=1, opacity=50)
+plt(is_sell_9 ? high : none, name="Sell 9", type=plt.type_circles, color=color.red, line_width=2)
+
+// Perfection - Slightly larger circles with different color
+plt(buy_perf_cond ? low*0.998 : none, name="Buy Perfected", type=plt.type_circles, color=#00FF00, line_width=2)
+plt(sell_perf_cond ? high*1.002 : none, name="Sell Perfected", type=plt.type_circles, color=#FF0000, line_width=2)
+
+// Countdown 12/13 - Crosses
+plt(is_buy_12 ? low*0.995 : none, name="Buy 12", type=plt.type_cross, color=#00FFFF, line_width=1, opacity=50)
+plt(is_buy_13 ? low*0.99 : none, name="Buy 13", type=plt.type_cross, color=#00FFFF, line_width=2)
+plt(is_sell_12 ? high*1.005 : none, name="Sell 12", type=plt.type_cross, color=#FF00FF, line_width=1, opacity=50)
+plt(is_sell_13 ? high*1.01 : none, name="Sell 13", type=plt.type_cross, color=#FF00FF, line_width=2)
+
+// Aggressive 13 - Diamond-like (using cross with different position)
+plt(agg_buy_trigger ? low*0.985 : none, name="Aggressive Buy", type=plt.type_cross, color=#FFFF00, line_width=1)
+plt(agg_sell_trigger ? high*1.015 : none, name="Aggressive Sell", type=plt.type_cross, color=#FFA500, line_width=1)
+
+// TD Combo 13
+plt(is_combo_buy_13 ? low*0.98 : none, name="Combo Buy 13", type=plt.type_circles, color=#00FFFF, line_width=2)
+plt(is_combo_sell_13 ? high*1.02 : none, name="Combo Sell 13", type=plt.type_circles, color=#FF00FF, line_width=2)
+
+// TDST Lines
+plt(show_tdst == 1 and tdst_buy_level > 0 ? tdst_buy_level : none, name="TDST Resistance", type=plt.type_linebr, color=color.red, line_width=1)
+plt(show_tdst == 1 and tdst_sell_level > 0 ? tdst_sell_level : none, name="TDST Support", type=plt.type_linebr, color=color.green, line_width=1)

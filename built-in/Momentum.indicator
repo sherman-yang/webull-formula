@@ -1,0 +1,4 @@
+len = define(10, min=1, name="Length")
+src = define(close, name="Source")
+momg = src - src[len]
+plt(momg, color=#C158FF, name="MOM")

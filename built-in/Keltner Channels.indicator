@@ -1,0 +1,14 @@
+useTrueRange = define(true, name="Exponential")
+length = define(20, min=1, name="Length")
+mult = define(1.0, name="Multiplier")
+src = define(close, name="Source")
+ma = ind.ema(src, length)
+range = useTrueRange ? ind.tr : high - low
+rangema = ind.ema(range, length)
+upper = ma + rangema * mult
+lower = ma - rangema * mult
+c = #5886FF
+u = plt(upper, color=c, name="Upper Band")
+plt(ma, color=c, name="Basis Band")
+l = plt(lower, color=c, name="Lower Band")
+plt.fill_between(u, l, color=c, opacity=10, name="Background")

@@ -1,0 +1,3 @@
+src = close
+obv = math.cumsum(math.sign(math.diff(src)) * volume)
+plt(obv, color=#5886FF, name="OBV")

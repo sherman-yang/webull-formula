@@ -1,0 +1,4 @@
+length = define(18, min=1, name="Length")
+out = 10000 * math.diff(ind.ema(ind.ema(ind.ema(math.log(close), length), length), length))
+hline(0, color=#9A9A9A, name="Zero",line_type=hline.type_dotted)
+plt(out, color=#FF5858, name="TRIX")

@@ -1,0 +1,2 @@
+ao = ind.sma(hl2,5) - ind.sma(hl2,34)
+plt(ao, color = math.diff(ao) <= 0 ? color.red : #00C288, type=plt.type_histogram, name="AO")

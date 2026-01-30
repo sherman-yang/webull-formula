@@ -1,0 +1,10 @@
+short = define(10, min=1, name="Short Period")
+long = define(50, min=1, name="Long Period")
+m = define(10, min=1, name="Multiplier")
+src = define(close, name="Source")
+
+ddd = ind.sma(src, short)-ind.sma(src, long)
+ama = ind.sma(ddd, m)
+
+plt(ddd ? ddd:none, name="DMA", color=#FBB41B)
+plt(ama ? ama: none, name="AMA", color=#5886FF)

@@ -1,0 +1,4 @@
+length = define(13, min=1,name="Length")
+efi = ind.ema(math.diff(close) * volume, length)
+plt(efi, color=#7058FF, name="EFI")
+hline(0, color=#9A9A9A, name="Zero",line_type=hline.type_dotted)

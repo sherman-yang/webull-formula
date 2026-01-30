@@ -1,0 +1,11 @@
+length = define(name="Length", type=define.integer, default_value=14)
+_pr(length) =>
+	max = math.highest(length)
+	min = math.lowest(length)
+	100 * (close - max) / (max - min)
+percentR = _pr(length)
+obPlot = hline(-20, name="Overbought", line_type=hline.type_dotted, color=#9A9A9A)
+hline(-50, name="Middle",  color=#0B90FF)
+osPlot = hline(-80, name="Oversold",line_type=hline.type_dotted, color=#9A9A9A)
+plt.fill_between(obPlot, osPlot, name="Background", color=#7058FF,opacity=10)
+plt(percentR, name="W%R", color=#FE9F21)

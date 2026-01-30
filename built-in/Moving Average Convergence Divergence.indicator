@@ -1,0 +1,19 @@
+fast_length = define(name="Fast Length", type=define.integer, default_value=12)
+slow_length = define(name="Slow Length", type=define.integer, default_value=26)
+src = define(name="Source", type=define.source, default_value=close)
+signal_length = define(name="signal Smoothing", type=define.integer, min = 1, max = 50, default_value = 9)
+// Plot colors
+col_macd = #FE9F21
+col_signal = #0B90FF
+// Calculating
+fast_ma = ind.ema(src, fast_length)
+slow_ma = ind.ema(src, slow_length)
+macd9 = fast_ma - slow_ma
+signal =   ind.ema(macd9, signal_length)
+hist = macd9 - signal
+plt(hist[1] < hist? hist >= 0 ? hist : none : none, name="HistogramUp1", type=plt.type_columns, color=#00C288, base_line=0, opacity=100 )
+plt(hist[1] >= hist? hist >= 0 ? hist : none : none, name="HistogramUp2", type=plt.type_columns, color=#00C288, base_line=0, opacity=50 )
+plt(hist[1] >= hist? hist < 0 ? hist : none : none, name="HistogramDown1", type=plt.type_columns, color=color.red, base_line=0, opacity=100 )
+plt(hist[1] < hist? hist < 0 ? hist : none : none, name="HistogramDown2", type=plt.type_columns, color= color.red, base_line=0, opacity=50 )
+plt(macd9, name="CCC", color=col_macd, opacity=100)
+plt(signal, name="signal", color=col_signal, opacity=100)

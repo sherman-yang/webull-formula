@@ -1,0 +1,16 @@
+smma(src, length) =>
+	smma =  0.0
+	smma := none(smma[1]) ? ind.sma(src, length) : (smma[1] * (length - 1) + src) / length
+	smma
+jawLength = define(13, min=1, name="Jaw Length")
+teethLength = define(8, min=1, name="Teeth Length")
+lipsLength = define(5, min=1, name="Lips Length")
+jawOffset = define(8, name="Jaw Offset")
+teethOffset = define(5, name="Teeth Offset")
+lipsOffset = define(3, name="Lips Offset")
+jaw = smma(hl2, jawLength)
+teeth = smma(hl2, teethLength)
+lips = smma(hl2, lipsLength)
+plt(jaw, offset = jawOffset, color=#5899FF, name="Jaw")
+plt(teeth, offset = teethOffset, color=#FF5858, name="Teeth")
+plt(lips, offset = lipsOffset, color=#58EFD1, name="Lips")

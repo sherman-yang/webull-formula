@@ -1,0 +1,8 @@
+length = define(14, min=1, name="Length")
+src = define(close, name="Source")
+ma = ind.sma(src, length)
+ccia = (src - ma) / (0.015 * math.dev(src, length))
+band1 = hline(100, color=#9A9A9A, line_type=hline.type_dotted, name="Upper Band")
+band0 = hline(-100, color=#9A9A9A, line_type=hline.type_dotted, name="Lower Band")
+plt.fill_between(band1, band0, color=#0B90FF, opacity=10, name="Background")
+plt(ccia, color=#0B90FF, name="RSI")

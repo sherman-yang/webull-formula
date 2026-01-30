@@ -1,0 +1,12 @@
+length = define(20, min=1, name="Length")
+src = define(close, name="Source")
+mult = define(2.0, min=0.001, max=50, name="StdDev")
+basis = ind.sma(src, length)
+dev = mult * math.std(src, length)
+upper = basis + dev
+lower = basis - dev
+bbr = (src - lower)/(upper - lower)
+band1 = hline(1, color=#9A9A9A, name="Overbought",line_type=hline.type_dotted)
+band0 = hline(0, color=#9A9A9A, name="Oversold",line_type=hline.type_dotted)
+plt.fill_between(band1, band0, color=#7058FF, name="Background",opacity=10)
+plt(bbr, color=#7058FF,name="%B")

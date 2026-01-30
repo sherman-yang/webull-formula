@@ -1,0 +1,13 @@
+length = define(10, min=1)
+xMAVolPrice = ind.ema(volume * close, length)
+xMAVol = ind.ema(volume, length)
+src = xMAVolPrice / xMAVol
+
+ma = ind.sma(src, length)
+cci = (src - ma) / (0.015 * math.dev(src, length))
+plt(cci, color=color.black, line_width=2)
+band1 = hline(100, color=#9A9A9A, line_type=hline.type_dashed)
+band0 = hline(-100, color=#9A9A9A, line_type=hline.type_dashed)
+plt.fill_between(band1, band0, color=color.olive,opacity=10)
+plt(cci>100 and cci[1]<100?cci:none, name="Cross above 100",  type=plt.type_circles,color=color.green)
+plt(cci<-100 and cci[1]>-100?cci:none, name="Cross under -100",  type=plt.type_circles,color=color.red)

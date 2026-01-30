@@ -1,0 +1,24 @@
+// Declaration
+fast_length = define(name="Fast Length", type=define.integer, default_value=12)
+slow_length = define(name="Slow Length", type=define.integer, default_value=26)
+src = define(name="Source", type=define.source, default_value=close)
+signal_length = define(name="signal Smoothing", type=define.integer, min = 1, max = 50, default_value = 9)
+
+// Calculating
+fast_ma = ind.ema(src, fast_length)
+slow_ma = ind.ema(src, slow_length)
+macd9 = fast_ma - slow_ma
+signal =   ind.ema(macd9, signal_length)
+hist = macd9 - signal
+
+// Plot
+plt(hist[1] < hist? hist >= 0 ? hist : none : none, name="HistogramUp1", type=plt.type_columns, color=#00C288, opacity=100, base_line=0)
+plt(hist[1] >= hist? hist >= 0 ? hist : none : none, name="HistogramUp2", type=plt.type_columns, color=#00C288, opacity=50 , base_line=0)
+plt(hist[1] >= hist? hist < 0 ? hist : none : none, name="HistogramDown1", type=plt.type_columns, color=color.red, opacity=100 , base_line=0)
+plt(hist[1] < hist? hist < 0 ? hist : none : none, name="HistogramDown2", type=plt.type_columns, color= color.red, opacity=50 , base_line=0)
+plt(macd9, name="MACD", color=color.blue, opacity=100)
+plt(signal, name="signal", color=color.orange, opacity=100)
+crossing_up = iff(macd9>signal and macd9[1]<signal[1], macd9, none)
+plt(crossing_up, name="crossing_up",  type=plt.type_circles,color=color.green)
+crossing_down = iff(macd9<signal and macd9[1]>signal[1], macd9, none)
+plt(crossing_down, name="crossing_down",  type=plt.type_circles,color=color.red)
