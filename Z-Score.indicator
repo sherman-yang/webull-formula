@@ -1,0 +1,60 @@
+// ==========================================
+// Z-Score (标准分数) - 4H优化
+// 原理:
+// 1) 计算指定周期的均值与标准差
+// 2) 用 Z = (价格 - 均值) / 标准差 标准化偏离
+// 使用方法:
+// - 均值回归: Z > +2 可能超买, Z < -2 可能超卖
+// - 趋势偏移: Z 长期 > 0 表示价格强势, < 0 表示偏弱
+// - 过滤噪音: -1 到 +1 视为正常波动区
+// 信号标记:
+// - 穿越 +2σ / -2σ 显示圆点(可关闭)
+// 参数建议(连续交易市场):
+// - 4H: Lookback=42, Band1=1.0, Band2=2.0, Signal=5
+// - 3m: Lookback=120, Band1=1.0, Band2=2.2, Signal=7
+// - 2m: Lookback=150, Band1=1.0, Band2=2.3, Signal=7
+// - 1m: Lookback=200, Band1=1.2, Band2=2.5, Signal=9
+// 默认参数面向 4H/24x7
+// ==========================================
+
+src = define(name="Source", type=define.source, default_value=close)
+length = define(name="Lookback", type=define.integer, default_value=42, min=2)
+
+band1 = define(name="Band 1σ", type=define.float, default_value=1.0, min=0.1)
+band2 = define(name="Band 2σ", type=define.float, default_value=2.0, min=0.1)
+
+signalType = define(name="Signal Type", default_value="EMA", optional_values=["None", "EMA", "SMA"])
+signalLength = define(name="Signal Length", type=define.integer, default_value=5, min=1)
+showSignal = define(name="Show Signal", type=define.bool, default_value=true)
+showSignals = define(name="Show Signals", type=define.bool, default_value=true)
+
+showFill = define(name="Fill Neutral Zone", type=define.bool, default_value=true)
+
+mean = ind.sma(src, length)
+dev = math.std(src, length)
+// 价格版 Z-Score: 偏离均值的标准化程度
+z_raw = dev == 0 ? 0 : (src - mean) / dev
+
+signal = signalType == "None" ? none : signalType == "EMA" ? ind.ema(z_raw, signalLength) : ind.sma(z_raw, signalLength)
+
+zColor = z_raw >= band2 ? #FF4D4F : z_raw <= -band2 ? #2FB344 : z_raw >= 0 ? #F59E0B : #3B82F6
+
+h0 = hline(0, name="Zero", color=#9A9A9A)
+h1 = hline(band1, name="+1σ", color=#B0B0B0, line_type=hline.type_dotted)
+h2 = hline(-band1, name="-1σ", color=#B0B0B0, line_type=hline.type_dotted)
+h3 = hline(band2, name="+2σ", color=#909090, line_type=hline.type_dotted)
+h4 = hline(-band2, name="-2σ", color=#909090, line_type=hline.type_dotted)
+
+fillTop = showFill ? band1 : none
+fillBottom = showFill ? -band1 : none
+pFillTop = plt(fillTop, display=0)
+pFillBottom = plt(fillBottom, display=0)
+plt.fill_between(pFillTop, pFillBottom, color=#5C8DFF, opacity=12, name="Neutral Zone")
+
+plt(z_raw, color=zColor, line_width=2, name="Z-Score")
+plt(showSignal ? signal : none, color=#FFB020, line_width=1, name="Signal")
+
+cross_up = z_raw >= band2 and z_raw[1] < band2
+cross_down = z_raw <= -band2 and z_raw[1] > -band2
+plt(showSignals and cross_up ? z_raw : none, name="Cross +2σ", type=plt.type_circles, color=#FF4D4F, line_width=2)
+plt(showSignals and cross_down ? z_raw : none, name="Cross -2σ", type=plt.type_circles, color=#2FB344, line_width=2)

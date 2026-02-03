@@ -1,0 +1,54 @@
+// ==========================================
+// RSI (4H 优化)
+// 原理:
+// - RSI 衡量一定周期内上涨/下跌动能强弱, 数值 0-100
+// 使用方法:
+// - 超买超卖: RSI > 70(偏强), RSI < 30(偏弱)
+// - 趋势确认: RSI 长期在 50 上方偏多, 在 50 下方偏空
+// - 可加信号线平滑噪音
+// 信号标记:
+// - 穿越超买/超卖阈值显示圆点(可关闭)
+// - 更极端阈值(例如 80/20)再出一层深色信号
+// 参数建议(连续交易市场):
+// - 4H: RSI=21, OB/OS=70/30, Extreme=80/20, Signal=5
+// - 3m: RSI=14, OB/OS=70/30, Extreme=80/20, Signal=5
+// - 2m: RSI=12, OB/OS=70/30, Extreme=80/20, Signal=4
+// - 1m: RSI=10, OB/OS=70/30, Extreme=80/20, Signal=3
+// 默认参数面向 4H/24x7
+// ==========================================
+
+src = define(name="Source", type=define.source, default_value=close)
+length = define(name="RSI Length", type=define.integer, default_value=21, min=1)
+ob = define(name="Overbought", type=define.integer, default_value=70, min=50, max=100)
+os = define(name="Oversold", type=define.integer, default_value=30, min=0, max=50)
+ob2 = define(name="Overbought Extreme", type=define.integer, default_value=80, min=50, max=100)
+os2 = define(name="Oversold Extreme", type=define.integer, default_value=20, min=0, max=50)
+
+signalType = define(name="Signal Type", default_value="SMA", optional_values=["None", "EMA", "SMA"])
+signalLength = define(name="Signal Length", type=define.integer, default_value=5, min=1)
+showSignal = define(name="Show Signal", type=define.bool, default_value=true)
+showSignals = define(name="Show Signals", type=define.bool, default_value=true)
+
+rsi = ind.rsi(src, length)
+signal = signalType == "None" ? none : signalType == "EMA" ? ind.ema(rsi, signalLength) : ind.sma(rsi, signalLength)
+
+rsiColor = rsi >= ob ? #FF4D4F : rsi <= os ? #2FB344 : #9AA0A6
+
+h1 = hline(ob, name="Overbought", color=#9A9A9A, line_type=hline.type_dotted)
+h2 = hline(os, name="Oversold", color=#9A9A9A, line_type=hline.type_dotted)
+h3 = hline(50, name="Midline", color=#C0C0C0)
+h4 = hline(ob2, name="Overbought Extreme", color=#B0B0B0, line_type=hline.type_dotted)
+h5 = hline(os2, name="Oversold Extreme", color=#B0B0B0, line_type=hline.type_dotted)
+
+plt.fill_between(h1, h2, color=#0B90FF, opacity=22, name="RSI Zone")
+plt(rsi, color=rsiColor, line_width=2, name="RSI")
+plt(showSignal ? signal : none, color=#FFB020, line_width=1, name="Signal")
+
+cross_ob = rsi >= ob and rsi[1] < ob
+cross_os = rsi <= os and rsi[1] > os
+cross_ob2 = rsi >= ob2 and rsi[1] < ob2
+cross_os2 = rsi <= os2 and rsi[1] > os2
+plt(showSignals and cross_ob ? rsi : none, name="Cross Overbought", type=plt.type_circles, color=#FF9C9C, line_width=2)
+plt(showSignals and cross_os ? rsi : none, name="Cross Oversold", type=plt.type_circles, color=#86E39A, line_width=2)
+plt(showSignals and cross_ob2 ? rsi : none, name="Cross Overbought Extreme", type=plt.type_circles, color=#CC0000, line_width=3)
+plt(showSignals and cross_os2 ? rsi : none, name="Cross Oversold Extreme", type=plt.type_circles, color=#006600, line_width=3)
