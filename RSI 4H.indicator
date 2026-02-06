@@ -29,25 +29,37 @@ signalLength = define(name="Signal Length", type=define.integer, default_value=5
 showSignal = define(name="Show Signal", type=define.bool, default_value=true)
 showSignals = define(name="Show Signals", type=define.bool, default_value=true)
 
+// 保护阈值顺序:
+// - 基础阈值保证 OB > OS
+// - 极端阈值保证 OB2 > OB 且 OS2 < OS
+ob_safe = ob > os ? ob : (os + 1)
+ob_safe := math.min(ob_safe, 99)
+os_safe = os < ob_safe ? os : (ob_safe - 1)
+os_safe := math.max(os_safe, 0)
+ob2_safe = ob2 > ob_safe ? ob2 : (ob_safe + 1)
+ob2_safe := math.min(ob2_safe, 100)
+os2_safe = os2 < os_safe ? os2 : (os_safe - 1)
+os2_safe := math.max(os2_safe, 0)
+
 rsi = ind.rsi(src, length)
 signal = signalType == "None" ? none : signalType == "EMA" ? ind.ema(rsi, signalLength) : ind.sma(rsi, signalLength)
 
-rsiColor = rsi >= ob ? #FF4D4F : rsi <= os ? #2FB344 : #9AA0A6
+rsiColor = rsi >= ob_safe ? #FF4D4F : rsi <= os_safe ? #2FB344 : #9AA0A6
 
-h1 = hline(ob, name="Overbought", color=#9A9A9A, line_type=hline.type_dotted)
-h2 = hline(os, name="Oversold", color=#9A9A9A, line_type=hline.type_dotted)
+h1 = hline(ob_safe, name="Overbought", color=#9A9A9A, line_type=hline.type_dotted)
+h2 = hline(os_safe, name="Oversold", color=#9A9A9A, line_type=hline.type_dotted)
 h3 = hline(50, name="Midline", color=#C0C0C0)
-h4 = hline(ob2, name="Overbought Extreme", color=#B0B0B0, line_type=hline.type_dotted)
-h5 = hline(os2, name="Oversold Extreme", color=#B0B0B0, line_type=hline.type_dotted)
+h4 = hline(ob2_safe, name="Overbought Extreme", color=#B0B0B0, line_type=hline.type_dotted)
+h5 = hline(os2_safe, name="Oversold Extreme", color=#B0B0B0, line_type=hline.type_dotted)
 
 plt.fill_between(h1, h2, color=#0B90FF, opacity=22, name="RSI Zone")
 plt(rsi, color=rsiColor, line_width=2, name="RSI")
 plt(showSignal ? signal : none, color=#FFB020, line_width=1, name="Signal")
 
-cross_ob = rsi >= ob and rsi[1] < ob
-cross_os = rsi <= os and rsi[1] > os
-cross_ob2 = rsi >= ob2 and rsi[1] < ob2
-cross_os2 = rsi <= os2 and rsi[1] > os2
+cross_ob = rsi >= ob_safe and rsi[1] < ob_safe
+cross_os = rsi <= os_safe and rsi[1] > os_safe
+cross_ob2 = rsi >= ob2_safe and rsi[1] < ob2_safe
+cross_os2 = rsi <= os2_safe and rsi[1] > os2_safe
 plt(showSignals and cross_ob ? rsi : none, name="Cross Overbought", type=plt.type_circles, color=#FF9C9C, line_width=2)
 plt(showSignals and cross_os ? rsi : none, name="Cross Oversold", type=plt.type_circles, color=#86E39A, line_width=2)
 plt(showSignals and cross_ob2 ? rsi : none, name="Cross Overbought Extreme", type=plt.type_circles, color=#CC0000, line_width=3)

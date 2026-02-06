@@ -1,6 +1,6 @@
-src = define(close, "Source")
-lookback = define(4, "Lookback")
-show_tdst = define(1, "Show TDST Lines (1=Yes)")
+src = define(close, name="Source")
+lookback = define(4, min=1, name="Lookback")
+show_tdst = define(true, type=define.bool, name="Show TDST Lines")
 
 // ==========================================
 // 神奇九转完整版 (TD Sequential Complete)
@@ -32,7 +32,7 @@ show_tdst = define(1, "Show TDST Lines (1=Yes)")
 // - 3m: Lookback=5 (降低噪音)
 // - 2m: Lookback=5 (降低噪音)
 // - 1m: Lookback=6 (进一步降噪)
-// - Show TDST: 1 (高周期可开), 低周期可按需关闭
+// - Show TDST: true (高周期可开), 低周期可按需关闭
 // ==========================================
 
 // ===== SETUP PHASE (九转) =====
@@ -126,5 +126,5 @@ plt(is_combo_buy_13 ? low*0.98 : none, name="Combo Buy 13", type=plt.type_circle
 plt(is_combo_sell_13 ? high*1.02 : none, name="Combo Sell 13", type=plt.type_circles, color=#FF9999, line_width=1)
 
 // TDST Lines
-plt(show_tdst == 1 and tdst_buy_level > 0 ? tdst_buy_level : none, name="TDST Resistance", type=plt.type_linebr, color=color.red, line_width=1)
-plt(show_tdst == 1 and tdst_sell_level > 0 ? tdst_sell_level : none, name="TDST Support", type=plt.type_linebr, color=color.green, line_width=1)
+plt(show_tdst and tdst_buy_level > 0 ? tdst_buy_level : none, name="TDST Resistance", type=plt.type_linebr, color=color.red, line_width=1)
+plt(show_tdst and tdst_sell_level > 0 ? tdst_sell_level : none, name="TDST Support", type=plt.type_linebr, color=color.green, line_width=1)
